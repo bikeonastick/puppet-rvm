@@ -1,6 +1,7 @@
 class rvm::passenger::apache(
   $ruby_version,
   $version,
+  $gemset = '',
   $rvm_prefix = '/usr/local/',
   $mininstances = '1',
   $maxpoolsize = '6',
@@ -18,12 +19,19 @@ class rvm::passenger::apache(
     'rvm::passenger::gem':
       ruby_version => $ruby_version,
       version => $version,
+      gemset => $gemset,
   }
 
   # TODO: How can we get the gempath automatically using the ruby version
   # Can we read the output of a command into a variable?
   # e.g. $gempath = `usr/local/rvm/bin/rvm ${ruby_version} exec rvm gemdir`
-  $gempath = "${rvm_prefix}rvm/gems/${ruby_version}/gems"
+  if $gemset == '' {
+    $ruby_version_with_gemset = $ruby_version
+  }else{
+    $ruby_version_with_gemset = "${ruby_version}@${gemset}"
+  }
+
+  $gempath = "${rvm_prefix}rvm/gems/${ruby_version_with_gemset}/gems"
   $binpath = "${rvm_prefix}rvm/bin/"
 
   case $::operatingsystem {
@@ -32,6 +40,7 @@ class rvm::passenger::apache(
         class { 'rvm::passenger::apache::ubuntu::post':
           ruby_version       => $ruby_version,
           version            => $version,
+          gemset             => $gemset,
           rvm_prefix         => $rvm_prefix,
           mininstances       => $mininstances,
           maxpoolsize        => $maxpoolsize,

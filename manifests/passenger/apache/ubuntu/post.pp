@@ -1,6 +1,7 @@
 class rvm::passenger::apache::ubuntu::post(
   $ruby_version,
   $version,
+  $gemset,
   $rvm_prefix = '/usr/local/',
   $mininstances = '1',
   $maxpoolsize = '6',
@@ -11,9 +12,15 @@ class rvm::passenger::apache::ubuntu::post(
   $binpath
 ) {
 
+  if $gemset == '' {
+    $ruby_version_with_gemset = $ruby_version
+  }else{
+    $ruby_version_with_gemset = "${ruby_version}@${gemset}"
+  }
+
   exec {
     'passenger-install-apache2-module':
-      command   => "${binpath}rvm ${ruby_version} exec passenger-install-apache2-module -a",
+      command   => "${binpath}rvm ${ruby_version_with_gemset} exec passenger-install-apache2-module -a",
       creates   => "${gempath}/passenger-${version}/ext/apache2/mod_passenger.so",
       logoutput => 'on_failure',
       require   => [Rvm_gem['passenger'], Package['apache2', 'build-essential', 'apache2-prefork-dev',
